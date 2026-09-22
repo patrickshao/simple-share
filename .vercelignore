@@ -1,0 +1,15 @@
+# Local credentials and backend state must never be uploaded.
+.env*
+!.env.example
+.convex
+.git
+.agents
+.codex
+node_modules
+.next*
+.vercel
+*.log
+*.tsbuildinfo
+# Local verification artifacts
+*.png
+docs

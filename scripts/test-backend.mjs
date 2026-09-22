@@ -1,0 +1,56 @@
+// Creates only uniquely named test pairings and rooms; cleans them up afterward.
+import assert from 'node:assert/strict';
+import { ConvexHttpClient } from 'convex/browser';
+import { api } from '../convex/_generated/api.js';
+import { randomToken, hashToken } from '../lib/device-identity.ts';
+import { makeRoomCode } from '../lib/peer.ts';
+const url = process.env.SIMPLE_SHARE_TEST_CONVEX_URL;
+if (!url || !['localhost','127.0.0.1'].includes(new URL(url).hostname)) throw new Error('Set SIMPLE_SHARE_TEST_CONVEX_URL to an explicit local development backend.');
+const client = new ConvexHttpClient(url, { logger: false });
+const pairId=randomToken(), tokenA=randomToken(), tokenB=randomToken(), wrong=randomToken(), hostSecret=randomToken(), guestSecret=randomToken(), code=makeRoomCode();
+const a={pairId,token:tokenA}, b={pairId,token:tokenB};
+const offer=JSON.stringify({type:'offer',sdp:'v=0\r\na=fingerprint:sha-256 TEST\r\n'});
+const answer=JSON.stringify({type:'answer',sdp:'v=0\r\na=fingerprint:sha-256 TEST\r\n'});
+try {
+ await client.mutation(api.pairing.create,{pairId,tokenA,hashB:await hashToken(tokenB)});
+ assert.deepEqual(await client.query(api.pairing.list,{devices:[{pairId,token:wrong}]}),[]);
+ await assert.rejects(client.mutation(api.pairing.confirm,a));
+ await assert.rejects(client.mutation(api.signals.createRoom,{code,offer,hostSecret,pairing:a}));
+ await client.mutation(api.pairing.confirm,b);
+ await client.mutation(api.pairing.heartbeat,{devices:[b]});
+ const list=await client.query(api.pairing.list,{devices:[a]});
+ assert.equal(list[0].confirmed,true); assert.ok(list[0].peerLastSeen>0);
+ await client.mutation(api.signals.createRoom,{code,offer,hostSecret,pairing:a});
+ assert.equal((await client.query(api.pairing.list,{devices:[b]}))[0].invite.code,code);
+ assert.equal(await client.query(api.signals.getRoomForJoin,{code}),null);
+ assert.equal(await client.query(api.signals.getRoomForJoin,{code,pairingToken:tokenA}),null);
+ assert.ok(await client.query(api.signals.getRoomForJoin,{code,pairingToken:tokenB}));
+ await assert.rejects(client.mutation(api.signals.joinRoom,{code,answer,guestSecret,pairingToken:wrong}));
+ assert.equal(await client.query(api.signals.getAnswerForHost,{code,hostSecret:wrong}),null);
+ await client.mutation(api.signals.closeRoom,{code,hostSecret:wrong});
+ assert.ok(await client.query(api.signals.getRoomForJoin,{code,pairingToken:tokenB}));
+ await client.mutation(api.signals.addHostCandidate,{code,hostSecret:wrong,candidate:'{"candidate":"forged"}'});
+ assert.deepEqual((await client.query(api.signals.getRoomForJoin,{code,pairingToken:tokenB})).hostCandidates,[]);
+ await assert.rejects(client.mutation(api.signals.addHostCandidate,{code,hostSecret,candidate:'x'.repeat(2001)}));
+ for(let i=0;i<45;i++) await client.mutation(api.signals.addHostCandidate,{code,hostSecret,candidate:JSON.stringify({candidate:`candidate-${i}`})});
+ assert.equal((await client.query(api.signals.getRoomForJoin,{code,pairingToken:tokenB})).hostCandidates.length,40);
+ assert.deepEqual(await client.query(api.signals.getHostCandidates,{code,guestSecret:wrong}),[]);
+ await client.mutation(api.signals.joinRoom,{code,answer,guestSecret,pairingToken:tokenB});
+ await assert.rejects(client.mutation(api.signals.joinRoom,{code,answer,guestSecret,pairingToken:tokenB}));
+ await client.mutation(api.signals.addGuestCandidate,{code,guestSecret:wrong,candidate:'{"candidate":"unauthorized"}'});
+ assert.deepEqual((await client.query(api.signals.getAnswerForHost,{code,hostSecret})).guestCandidates,[]);
+ await client.mutation(api.signals.addGuestCandidate,{code,guestSecret,candidate:'{"candidate":"authorized"}'});
+ assert.equal((await client.query(api.signals.getAnswerForHost,{code,hostSecret})).guestCandidates.length,1);
+ await client.mutation(api.pairing.clearInvite,{...b,code});
+ assert.equal(await client.query(api.signals.getRoomForJoin,{code,pairingToken:tokenB}),null);
+ await client.mutation(api.signals.createRoom,{code,offer,hostSecret,pairing:a});
+ await client.mutation(api.pairing.forget,{pairId,token:wrong});
+ assert.equal((await client.query(api.pairing.list,{devices:[a]})).length,1);
+ await client.mutation(api.pairing.forget,b);
+ assert.deepEqual(await client.query(api.pairing.list,{devices:[a]}),[]);
+ assert.equal(await client.query(api.signals.getRoomForJoin,{code,pairingToken:tokenB}),null);
+ console.log('Backend smoke test passed: mutual pairing approval, private rendezvous, guest authorization, one joiner, presence, and revocation.');
+} finally {
+ await client.mutation(api.signals.closeRoom,{code,hostSecret});
+ await client.mutation(api.pairing.forget,a);
+}

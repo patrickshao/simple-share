@@ -1,0 +1,33 @@
+# dependencies
+/node_modules
+
+# Next.js
+/.next
+/out
+
+# local configuration
+.env*
+!.env.example
+/.agents
+/.codex
+
+# Convex local state
+/.convex
+
+# logs
+*.log
+*.tsbuildinfo
+
+# system files
+.DS_Store
+
+# Vercel
+.vercel
+
+# Backups of local secrets
+.env*.bak*
+/.next-verify
+
+# Local UI verification screenshots
+/dark-picker-verify.png
+/latest-ui.png
