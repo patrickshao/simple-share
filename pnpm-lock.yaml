@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@convex-dev/rate-limiter':
-        specifier: 0.3.2
-        version: 0.3.2(convex@1.45.0(react@19.2.8))(react@19.2.8)
+        specifier: 0.4.0
+        version: 0.4.0(convex@1.45.0(react@19.2.8))(react@19.2.8)(typescript@5.9.3)
       convex:
         specifier: 1.45.0
         version: 1.45.0(react@19.2.8)
@@ -45,10 +45,15 @@ importers:
 
 packages:
 
-  '@convex-dev/rate-limiter@0.3.2':
-    resolution: {integrity: sha512-+oBPsBfFbzdxiF/9XaaTQmVnvDlvEfg/c69/v8LxTbw4VLuiflIKlfnPQL8OS0azXQQ11hcPWHmU8ytFmHKDXA==}
+  '@convex-dev/batch-worker@0.3.4':
+    resolution: {integrity: sha512-CKeOrPFsPoIKozMNP/qKExSwE6vd63QDKbZIbchK+P3S7fyGuFjRLbTg6+QmC/mzOjn6I5N8zo+k/SdXqeaA2g==}
     peerDependencies:
-      convex: ^1.24.8
+      convex: ^1.43.0
+
+  '@convex-dev/rate-limiter@0.4.0':
+    resolution: {integrity: sha512-AEXbo8+pMT1bPlOJiofmue55EoiFp9ygCcEnckx+RENoPjRYEg5jiihAtaD5TKDwdmHJyvLwNQ1h+MbhgvMyOA==}
+    peerDependencies:
+      convex: ^1.43.0
       react: ^18.2.0 || ^19.0.0
     peerDependenciesMeta:
       react:
@@ -480,6 +485,28 @@ packages:
   color-name@1.1.4:
     resolution: {integrity: sha512-dOy+3AuW3a2wNbZHIuMZpTcgjGuLU/uBL/ubcZF9OXbDo8ff4O8yVp5Bf0efS8uEoYo5q4Fx7dY9OgQGXgAsQA==}
 
+  convex-helpers@0.1.124:
+    resolution: {integrity: sha512-Gbu/jq6I3x5Y51cXP5c7+CI3t15vX5Xi2G0tOym3rxpBtYqrI+qWwxkqZgJYrHHccY42wZudB8h6kS3fak8Aeg==}
+    hasBin: true
+    peerDependencies:
+      '@standard-schema/spec': ^1.0.0
+      convex: ^1.43.0
+      hono: ^4.0.5
+      react: ^17.0.2 || ^18.0.0 || ^19.0.0
+      typescript: ^5.5 || ^6.0.0 || ^7.0.0
+      zod: ^3.25.0 || ^4.0.0
+    peerDependenciesMeta:
+      '@standard-schema/spec':
+        optional: true
+      hono:
+        optional: true
+      react:
+        optional: true
+      typescript:
+        optional: true
+      zod:
+        optional: true
+
   convex@1.45.0:
     resolution: {integrity: sha512-AV3B56Ptu/14d76g3urBJ50dwpiZa6uJaLT84OWox5aCwZIJiuAamdjv3lLHDzs8vv5kC31anEZohhUe3qJ2bA==}
     engines: {node: '>=20.0.0', npm: '>=7.0.0'}
@@ -704,11 +731,28 @@ packages:
 
 snapshots:
 
-  '@convex-dev/rate-limiter@0.3.2(convex@1.45.0(react@19.2.8))(react@19.2.8)':
+  '@convex-dev/batch-worker@0.3.4(convex@1.45.0(react@19.2.8))(react@19.2.8)(typescript@5.9.3)':
     dependencies:
+      convex: 1.45.0(react@19.2.8)
+      convex-helpers: 0.1.124(convex@1.45.0(react@19.2.8))(react@19.2.8)(typescript@5.9.3)
+    transitivePeerDependencies:
+      - '@standard-schema/spec'
+      - hono
+      - react
+      - typescript
+      - zod
+
+  '@convex-dev/rate-limiter@0.4.0(convex@1.45.0(react@19.2.8))(react@19.2.8)(typescript@5.9.3)':
+    dependencies:
+      '@convex-dev/batch-worker': 0.3.4(convex@1.45.0(react@19.2.8))(react@19.2.8)(typescript@5.9.3)
       convex: 1.45.0(react@19.2.8)
     optionalDependencies:
       react: 19.2.8
+    transitivePeerDependencies:
+      - '@standard-schema/spec'
+      - hono
+      - typescript
+      - zod
 
   '@emnapi/runtime@1.11.3':
     dependencies:
@@ -971,6 +1015,13 @@ snapshots:
       color-name: 1.1.4
 
   color-name@1.1.4: {}
+
+  convex-helpers@0.1.124(convex@1.45.0(react@19.2.8))(react@19.2.8)(typescript@5.9.3):
+    dependencies:
+      convex: 1.45.0(react@19.2.8)
+    optionalDependencies:
+      react: 19.2.8
+      typescript: 5.9.3
 
   convex@1.45.0(react@19.2.8):
     dependencies:
